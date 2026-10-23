@@ -1,0 +1,461 @@
+
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Potraviny online</title>
+<style>
+:root {
+  --pozadie: #10130f;
+  --panel: #1b2019;
+  --text: #f5f5ec;
+  --tlmene: #aab1a4;
+  --zelena: #c5f36b;
+  --okraj: #343b30;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--pozadie);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+}
+header {
+  padding: 20px 6%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  border-bottom: 1px solid var(--okraj);
+}
+.logo { font-size: 23px; font-weight: 800; }
+.logo span { color: var(--zelena); }
+button, input, textarea { font: inherit; padding: 11px 13px; border-radius: 8px; }
+button {
+  border: 0; background: var(--zelena); color: #151a10;
+  font-weight: bold; cursor: pointer;
+}
+button:hover { opacity: .85; }
+button.druhe { background: #343b30; color: white; }
+button.mazat { background: #b83d3d; color: white; }
+main { max-width: 1200px; margin: auto; padding: 35px 6%; }
+.hero { padding: 28px 0 38px; }
+.hero h1 { font-size: clamp(38px, 7vw, 68px); margin: 12px 0; }
+.hero h1 span { color: var(--zelena); }
+.hero p { color: var(--tlmene); line-height: 1.6; }
+.nadpis {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px; margin: 24px 0;
+}
+.produkty {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+.karta {
+  overflow: hidden; border: 1px solid var(--okraj);
+  background: var(--panel); border-radius: 14px;
+}
+.karta img {
+  width: 100%; height: 190px; object-fit: cover; background: #252b21;
+}
+.obsah { padding: 16px; }
+.obsah h3 { margin-top: 0; }
+.popis { color: var(--tlmene); min-height: 38px; line-height: 1.5; }
+.cena { font-size: 22px; font-weight: bold; margin: 15px 0; }
+.karta button { width: 100%; }
+.panel {
+  background: var(--panel); border: 1px solid var(--okraj);
+  padding: 20px; border-radius: 14px; margin: 25px 0;
+}
+input, textarea {
+  display: block; width: 100%; margin: 8px 0 14px;
+  background: #10130f; color: white; border: 1px solid var(--okraj);
+}
+textarea { min-height: 75px; }
+label { font-size: 14px; color: var(--tlmene); }
+.riadok { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.riadok > * { flex: 1; }
+.polozka {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--okraj);
+}
+.male { color: var(--tlmene); font-size: 13px; }
+.sprava { color: var(--zelena); overflow-wrap: anywhere; }
+.chyba { color: #ff8989; }
+[hidden] { display: none !important; }
+footer {
+  padding: 25px; text-align: center; color: var(--tlmene);
+  border-top: 1px solid var(--okraj);
+}
+@media (max-width: 520px) {
+  header { padding: 15px 4%; }
+  main { padding: 22px 4%; }
+  .karta img { height: 160px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">POTRAVINY<span>.</span></div>
+  <div class="riadok" style="flex:0">
+    <button class="druhe" id="tlacidloKosik">Košík (0)</button>
+    <button class="druhe" id="tlacidloAdmin">Administrácia</button>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <p>TVÔJ ONLINE OBCHOD S POTRAVINAMI</p>
+    <h1>Čerstvé potraviny.<br><span>Dobré ceny.</span></h1>
+    <p>Vyber si z našej ponuky potravín a vlož ich do košíka.</p>
+  </section>
+
+  <section>
+    <div class="nadpis">
+      <h2>Naše potraviny</h2>
+      <span class="male" id="pocetProduktov"></span>
+    </div>
+    <p id="spravaObchodu" class="sprava" role="status"></p>
+    <div id="zoznamProduktov" class="produkty"></div>
+  </section>
+
+  <section class="panel" id="sekciaKosik" hidden>
+    <div class="nadpis">
+      <h2>Tvoj košík</h2>
+      <button class="druhe" id="zatvorKosik">Zavrieť</button>
+    </div>
+    <div id="obsahKosika"></div>
+    <h3 id="celkovaCena">Spolu: 0,00 €</h3>
+    <button id="nakupit">Dokončiť skúšobný nákup</button>
+    <p class="male">Ide iba o školskú ukážku. Platba sa nevykoná a objednávka sa nikam neodošle.</p>
+    <p id="spravaNakupu" class="sprava" role="status"></p>
+  </section>
+
+  <section class="panel" id="sekciaAdmin" hidden>
+    <div class="nadpis">
+      <h2>Administrácia obchodu</h2>
+      <button class="druhe" id="zatvorAdmin">Zavrieť</button>
+    </div>
+
+    <div id="prihlasenie">
+      <p>Prihlás sa na správu potravín.</p>
+      <form id="formularPrihlasenia">
+        <label for="heslo">Heslo administrátora</label>
+        <input id="heslo" type="password" autocomplete="current-password" required>
+        <button type="submit">Prihlásiť sa</button>
+      </form>
+    </div>
+
+    <div id="spravaAdmina" hidden>
+      <h3>Pridať potravinu</h3>
+      <form id="formularPotraviny">
+        <label for="nazov">Názov potraviny</label>
+        <input id="nazov" maxlength="80" required>
+
+        <label for="cena">Cena v eurách</label>
+        <input id="cena" type="number" min="0" max="1000000"
+          step="0.01" required>
+
+        <label for="popis">Popis</label>
+        <textarea id="popis" maxlength="300"></textarea>
+
+        <label for="obrazok">Odkaz na obrázok (nepovinné, HTTPS)</label>
+        <input id="obrazok" type="url" placeholder="https://...">
+
+        <button type="submit">Pridať potravinu</button>
+      </form>
+
+      <div class="nadpis">
+        <h3>Správa potravín</h3>
+        <button class="druhe" id="odhlasit">Odhlásiť sa</button>
+      </div>
+      <div id="zoznamAdmina"></div>
+    </div>
+
+    <p id="spravaAdministracie" class="sprava" role="status"></p>
+  </section>
+</main>
+
+<footer>Potraviny online · Školský projekt</footer>
+
+<script>
+const API = "/api";
+let potraviny = [];
+let kosik = [];
+let tokenAdmina = null;
+
+const $ = id => document.getElementById(id);
+
+function eur(cena) {
+  return Number(cena).toLocaleString("sk-SK", {
+    style: "currency",
+    currency: "EUR"
+  });
+}
+
+function sprava(id, text, chyba = false) {
+  $(id).textContent = text;
+  $(id).classList.toggle("chyba", chyba);
+}
+
+async function poziadavka(cesta, moznosti = {}) {
+  const hlavicky = { ...(moznosti.headers || {}) };
+
+  if (moznosti.body) {
+    hlavicky["Content-Type"] = "application/json";
+  }
+
+  if (tokenAdmina) {
+    hlavicky.Authorization = "Bearer " + tokenAdmina;
+  }
+
+  const odpoved = await fetch(API + cesta, {
+    ...moznosti,
+    headers: hlavicky
+  });
+
+  const data = await odpoved.json().catch(() => ({}));
+
+  if (!odpoved.ok) {
+    if (odpoved.status === 401 && tokenAdmina) {
+      tokenAdmina = null;
+      $("prihlasenie").hidden = false;
+      $("spravaAdmina").hidden = true;
+    }
+    throw new Error(data.chyba || "Požiadavka zlyhala.");
+  }
+
+  return data;
+}
+
+function prvok(tag, trieda, text) {
+  const element = document.createElement(tag);
+  if (trieda) element.className = trieda;
+  if (text !== undefined) element.textContent = text;
+  return element;
+}
+
+function vykresliPotraviny() {
+  const zoznam = $("zoznamProduktov");
+  zoznam.replaceChildren();
+
+  $("pocetProduktov").textContent =
+    potraviny.length + " potravín";
+
+  potraviny.forEach(p => {
+    const karta = prvok("article", "karta");
+    const obrazok = document.createElement("img");
+
+    obrazok.src = p.obrazok ||
+      "https://placehold.co/600x400?text=Potravina";
+    obrazok.alt = p.nazov;
+    obrazok.loading = "lazy";
+
+    obrazok.onerror = () => {
+      obrazok.onerror = null;
+      obrazok.src =
+        "https://placehold.co/600x400?text=Potravina";
+    };
+
+    const obsah = prvok("div", "obsah");
+    obsah.append(
+      prvok("h3", "", p.nazov),
+      prvok("p", "popis", p.popis || ""),
+      prvok("div", "cena", eur(p.cena))
+    );
+
+    const tlacidlo = prvok("button", "", "Pridať do košíka");
+
+    tlacidlo.addEventListener("click", () => {
+      kosik.push(p.id);
+      aktualizujKosik();
+      sprava("spravaObchodu", p.nazov + " bol pridaný do košíka.");
+    });
+
+    obsah.append(tlacidlo);
+    karta.append(obrazok, obsah);
+    zoznam.append(karta);
+  });
+}
+
+function aktualizujKosik() {
+  $("tlacidloKosik").textContent = "Košík (" + kosik.length + ")";
+}
+
+function vykresliKosik() {
+  const obsah = $("obsahKosika");
+  obsah.replaceChildren();
+  let spolu = 0;
+
+  kosik.forEach((id, index) => {
+    const p = potraviny.find(item => item.id === id);
+    if (!p) return;
+
+    spolu += Number(p.cena);
+
+    const riadok = prvok("div", "polozka");
+    riadok.append(prvok("span", "", p.nazov + " – " + eur(p.cena)));
+
+    const odstranit = prvok("button", "druhe", "Odstrániť");
+    odstranit.addEventListener("click", () => {
+      kosik.splice(index, 1);
+      aktualizujKosik();
+      vykresliKosik();
+    });
+
+    riadok.append(odstranit);
+    obsah.append(riadok);
+  });
+
+  $("celkovaCena").textContent = "Spolu: " + eur(spolu);
+}
+
+function vykresliAdministraciu() {
+  const zoznam = $("zoznamAdmina");
+  zoznam.replaceChildren();
+
+  potraviny.forEach(p => {
+    const riadok = prvok("div", "polozka");
+    const udaje = prvok("div");
+
+    udaje.append(
+      prvok("strong", "", p.nazov),
+      prvok("div", "male", eur(p.cena))
+    );
+
+    const odstranit = prvok("button", "mazat", "Odstrániť");
+
+    odstranit.addEventListener("click", async () => {
+      if (!confirm("Naozaj chceš odstrániť potravinu " + p.nazov + "?")) {
+        return;
+      }
+
+      try {
+        await poziadavka("/products", {
+          method: "DELETE",
+          body: JSON.stringify({ id: p.id })
+        });
+
+        kosik = kosik.filter(id => id !== p.id);
+        aktualizujKosik();
+        await nacitajPotraviny();
+        sprava("spravaAdministracie", "Potravina bola odstránená.");
+      } catch (chyba) {
+        sprava("spravaAdministracie", chyba.message, true);
+      }
+    });
+
+    riadok.append(udaje, odstranit);
+    zoznam.append(riadok);
+  });
+}
+
+async function nacitajPotraviny() {
+  potraviny = await poziadavka("/products");
+  vykresliPotraviny();
+  vykresliKosik();
+
+  if (tokenAdmina) vykresliAdministraciu();
+}
+
+$("tlacidloKosik").addEventListener("click", () => {
+  $("sekciaKosik").hidden = false;
+  vykresliKosik();
+});
+
+$("zatvorKosik").addEventListener("click", () => {
+  $("sekciaKosik").hidden = true;
+});
+
+$("tlacidloAdmin").addEventListener("click", () => {
+  $("sekciaAdmin").hidden = false;
+  $("sekciaAdmin").scrollIntoView({ behavior: "smooth" });
+});
+
+$("zatvorAdmin").addEventListener("click", () => {
+  $("sekciaAdmin").hidden = true;
+});
+
+$("formularPrihlasenia").addEventListener("submit", async e => {
+  e.preventDefault();
+  sprava("spravaAdministracie", "Prihlasovanie...");
+
+  try {
+    const data = await poziadavka("/login", {
+      method: "POST",
+      body: JSON.stringify({ heslo: $("heslo").value })
+    });
+
+    tokenAdmina = data.token;
+    $("heslo").value = "";
+    $("prihlasenie").hidden = true;
+    $("spravaAdmina").hidden = false;
+
+    await nacitajPotraviny();
+    vykresliAdministraciu();
+    sprava("spravaAdministracie", "Úspešne si sa prihlásil.");
+  } catch (chyba) {
+    sprava("spravaAdministracie", chyba.message, true);
+  }
+});
+
+$("formularPotraviny").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const potravina = {
+    nazov: $("nazov").value.trim(),
+    cena: Number($("cena").value),
+    popis: $("popis").value.trim(),
+    obrazok: $("obrazok").value.trim()
+  };
+
+  try {
+    await poziadavka("/products", {
+      method: "POST",
+      body: JSON.stringify(potravina)
+    });
+
+    $("formularPotraviny").reset();
+    await nacitajPotraviny();
+    sprava("spravaAdministracie", "Potravina bola pridaná.");
+  } catch (chyba) {
+    sprava("spravaAdministracie", chyba.message, true);
+  }
+});
+
+$("odhlasit").addEventListener("click", () => {
+  tokenAdmina = null;
+  $("prihlasenie").hidden = false;
+  $("spravaAdmina").hidden = true;
+  sprava("spravaAdministracie", "Bol si odhlásený.");
+});
+
+$("nakupit").addEventListener("click", () => {
+  if (kosik.length === 0) {
+    sprava("spravaNakupu", "Košík je prázdny.", true);
+    return;
+  }
+
+  kosik = [];
+  aktualizujKosik();
+  vykresliKosik();
+
+  sprava(
+    "spravaNakupu",
+    "Skúšobný nákup bol dokončený. Platba sa nevykonala."
+  );
+});
+
+nacitajPotraviny().catch(chyba => {
+  console.error(chyba);
+  sprava(
+    "spravaObchodu",
+    "Potraviny sa nepodarilo načítať. Skontroluj nasadenie na Netlify.",
+    true
+  );
+});
+</script>
+</body>
+</html>
